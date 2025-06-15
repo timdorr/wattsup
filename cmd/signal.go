@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/apex/log"
 )
 
 var onlyOneSignalHandler = make(chan struct{})
@@ -19,8 +21,10 @@ func setupSignalHandler() context.Context {
 	signal.Notify(c, shutdownSignals...)
 	go func() {
 		<-c
+		log.Info("Shutting down gracefully...")
 		cancel()
 		<-c
+		log.Fatal("Forcing shutdown...")
 		os.Exit(1) // second signal. Exit directly.
 	}()
 
