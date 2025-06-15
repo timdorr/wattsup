@@ -4,7 +4,6 @@ go 1.24.4
 
 require (
 	github.com/apex/log v1.9.0
-	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	go.bug.st/serial v1.6.4

@@ -7,8 +7,6 @@ import (
 	"github.com/apex/log/handlers/text"
 	"github.com/timdorr/wattsup/pkg/monitor"
 
-	"github.com/joho/godotenv"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -45,16 +43,17 @@ func init() {
 }
 
 func initConfig() {
-	if _, err := os.Stat(".env"); err == nil {
-		log.Info("Loading environment file")
-		err := godotenv.Load()
-		if err != nil {
-			log.WithError(err).Fatal("Error loading environment file")
-		}
-	}
-
 	viper.SetEnvPrefix("wattsup")
 	viper.AutomaticEnv()
+
+	viper.SetConfigName("wattsup")
+	viper.AddConfigPath(".")
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			log.WithError(err).Error("Error reading config file")
+			os.Exit(1)
+		}
+	}
 
 	log.SetLevel(log.DebugLevel)
 	log.SetHandler(text.New(os.Stdout))
