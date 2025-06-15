@@ -5,6 +5,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
+	"github.com/timdorr/wattsup/pkg/monitor"
 
 	"github.com/joho/godotenv"
 
@@ -19,6 +20,11 @@ var rootCmd = &cobra.Command{
 		ctx := setupSignalHandler()
 
 		log.Info("⚡⚡⚡ Starting WattsUp ⚡⚡⚡")
+
+		devices, _ := monitor.ListDevices()
+		for _, device := range devices {
+			log.WithField("device", device).Info("Found device")
+		}
 
 		<-ctx.Done()
 		log.Info("⚡⚡⚡ WattsUp stopped ⚡⚡⚡")
