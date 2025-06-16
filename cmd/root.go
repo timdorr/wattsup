@@ -5,7 +5,6 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
-	"github.com/timdorr/wattsup/pkg/monitor"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -14,18 +13,8 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "wattsup",
 	Short: "A monitoring tool for Sol-Ark 15 inverters",
-	Run: func(cmd *cobra.Command, args []string) {
-		ctx := setupSignalHandler()
-
-		log.Info("⚡⚡⚡ Starting WattsUp ⚡⚡⚡")
-
-		devices, _ := monitor.ListDevices()
-		for _, device := range devices {
-			log.WithField("device", device).Info("Found device")
-		}
-
-		<-ctx.Done()
-		log.Info("⚡⚡⚡ WattsUp stopped ⚡⚡⚡")
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
 	},
 }
 
@@ -36,6 +25,8 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
+
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "enable verbose output")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 
