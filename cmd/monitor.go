@@ -21,14 +21,13 @@ var monitorCmd = &cobra.Command{
 
 		log.Info("⚡⚡⚡ Starting WattsUp ⚡⚡⚡")
 
-		for name, portFileName := range viper.GetStringMapString("devices") {
+		for name, device := range viper.GetStringMap("devices") {
+			log.WithField("device", device).Infof("Starting monitor for device: %s", name)
 
-			monitor, err := monitor.NewMonitor(name, portFileName)
-			if err != nil {
-				log.WithField("device", portFileName).WithError(err).Error("Failed to create monitor")
-				continue
-			}
+			portFileName := device.(map[string]interface{})["device"].(string)
+			slaveId := int(device.(map[string]interface{})["slaveid"].(float64))
 
+			monitor := monitor.NewMonitor(name, portFileName, slaveId)
 			go monitor.Start(ctx)
 		}
 
