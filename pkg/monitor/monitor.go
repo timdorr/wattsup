@@ -30,14 +30,18 @@ func NewMonitor(deviceName string, portFileName string, slaveId int) *Monitor {
 func (m *Monitor) Start(ctx context.Context) error {
 	log.WithField("name", m.deviceName).WithField("device", m.portFileName).Info("Starting monitor...")
 
-	err := m.handler.Connect()
-	if err != nil {
-		log.WithError(err).WithField("device", m.deviceName).Error("Failed to connect")
-		return err
-	}
+	for {
+		err := m.handler.Connect()
+		if err != nil {
+			log.WithError(err).WithField("device", m.deviceName).Error("Failed to connect")
+			return err
+		}
 
-	go m.watch(ctx)
-	return nil
+		err = m.watch(ctx)
+		if err == nil {
+			return nil
+		}
+	}
 }
 
 func (m *Monitor) watch(ctx context.Context) error {
