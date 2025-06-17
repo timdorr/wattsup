@@ -41,6 +41,8 @@ func (m *Monitor) Start(ctx context.Context) error {
 		if err == nil {
 			return nil
 		}
+
+		time.Sleep(5 * time.Second)
 	}
 }
 
