@@ -50,7 +50,8 @@ func (m *Monitor) Start(ctx context.Context) error {
 }
 
 func (m *Monitor) watch(ctx context.Context) error {
-	tick := time.NewTicker(1 * time.Second)
+	interval := 1 * time.Second
+	tick := time.NewTicker(interval)
 
 	for {
 		select {
@@ -59,10 +60,14 @@ func (m *Monitor) watch(ctx context.Context) error {
 			m.handler.Close()
 			return nil
 		case <-tick.C:
+			tick.Stop()
+
 			err := m.read()
 			if err != nil {
 				return err
 			}
+
+			tick.Reset(interval)
 		}
 	}
 }
