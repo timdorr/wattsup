@@ -25,9 +25,9 @@ var monitorCmd = &cobra.Command{
 			log.WithField("device", device).Infof("Starting monitor for device: %s", name)
 
 			portFileName := device.(map[string]interface{})["device"].(string)
-			slaveId := int(device.(map[string]interface{})["slaveid"].(float64))
+			id := int(device.(map[string]interface{})["id"].(float64))
 
-			monitor := monitor.NewMonitor(name, portFileName, slaveId)
+			monitor := monitor.NewMonitor(name, portFileName, id)
 			go monitor.Start(ctx)
 		}
 
