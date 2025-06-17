@@ -3,6 +3,9 @@ package cmd
 import (
 	"os"
 
+	"github.com/timdorr/wattsup/pkg/config"
+	"github.com/timdorr/wattsup/pkg/monitor"
+
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
 
@@ -15,6 +18,23 @@ var rootCmd = &cobra.Command{
 	Short: "A monitoring tool for Sol-Ark 15 inverters",
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx := setupSignalHandler()
+
+		config := config.GetConfig()
+
+		log.Info("⚡⚡⚡ Starting WattsUp ⚡⚡⚡")
+
+		for _, device := range config.Devices {
+			log.WithField("device", device).Infof("Starting monitor for device: %s", device.Name)
+
+			monitor := monitor.NewMonitor(device.Name, device.File, device.ID, config.Registers)
+			go monitor.Start(ctx)
+		}
+
+		<-ctx.Done()
+		log.Info("⚡⚡⚡ WattsUp stopped ⚡⚡⚡")
 	},
 }
 
@@ -34,18 +54,6 @@ func init() {
 }
 
 func initConfig() {
-	viper.SetEnvPrefix("wattsup")
-	viper.AutomaticEnv()
-
-	viper.SetConfigName("wattsup")
-	viper.AddConfigPath(".")
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			log.WithError(err).Error("Error reading config file")
-			os.Exit(1)
-		}
-	}
-
 	log.SetLevel(log.DebugLevel)
 	log.SetHandler(text.New(os.Stdout))
 }

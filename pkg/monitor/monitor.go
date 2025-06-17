@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"time"
 
+	"github.com/timdorr/wattsup/pkg/config"
+
 	"github.com/apex/log"
 	"github.com/goburrow/modbus"
 )
@@ -12,11 +14,12 @@ import (
 type Monitor struct {
 	deviceName   string
 	portFileName string
+	registers    []config.Register
 	handler      *modbus.RTUClientHandler
 	client       modbus.Client
 }
 
-func NewMonitor(deviceName string, portFileName string, id int) *Monitor {
+func NewMonitor(deviceName, portFileName string, id int, registers []config.Register) *Monitor {
 	handler := newHandler(portFileName, id)
 
 	return &Monitor{
@@ -24,6 +27,7 @@ func NewMonitor(deviceName string, portFileName string, id int) *Monitor {
 		portFileName: portFileName,
 		handler:      handler,
 		client:       newClient(handler),
+		registers:    registers,
 	}
 }
 
