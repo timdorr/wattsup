@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"context"
-	"encoding/binary"
 	"time"
 
 	"github.com/timdorr/wattsup/pkg/config"
@@ -60,13 +59,10 @@ func (m *Monitor) watch(ctx context.Context) error {
 			m.handler.Close()
 			return nil
 		case <-tick.C:
-			res, err := m.client.ReadHoldingRegisters(178, 1)
+			err := m.read()
 			if err != nil {
-				log.WithError(err).WithField("device", m.deviceName).Error("Failed to read holding registers")
 				return err
 			}
-
-			log.WithField("device", m.deviceName).Infof("Received data: %d", binary.BigEndian.Uint16(res))
 		}
 	}
 }

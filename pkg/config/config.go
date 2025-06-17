@@ -21,7 +21,6 @@ type Device struct {
 type Register struct {
 	Name    string `json:"name"`
 	Address uint16 `json:"address"`
-	Type    string `json:"type"`
 }
 
 func GetConfig() Config {
