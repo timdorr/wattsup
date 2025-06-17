@@ -16,8 +16,8 @@ type Monitor struct {
 	client       modbus.Client
 }
 
-func NewMonitor(deviceName string, portFileName string, slaveId int) *Monitor {
-	handler := newHandler(portFileName, slaveId)
+func NewMonitor(deviceName string, portFileName string, id int) *Monitor {
+	handler := newHandler(portFileName, id)
 
 	return &Monitor{
 		deviceName:   deviceName,
