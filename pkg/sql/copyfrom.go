@@ -30,9 +30,7 @@ func (r *iteratorForCreateMetrics) Next() bool {
 func (r iteratorForCreateMetrics) Values() ([]interface{}, error) {
 	return []interface{}{
 		r.rows[0].Time,
-		r.rows[0].DeviceName,
 		r.rows[0].DeviceID,
-		r.rows[0].RegisterName,
 		r.rows[0].RegisterAddress,
 		r.rows[0].Value,
 	}, nil
@@ -43,5 +41,5 @@ func (r iteratorForCreateMetrics) Err() error {
 }
 
 func (q *Queries) CreateMetrics(ctx context.Context, arg []CreateMetricsParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"metrics"}, []string{"time", "device_name", "device_id", "register_name", "register_address", "value"}, &iteratorForCreateMetrics{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"metrics"}, []string{"time", "device_id", "register_address", "value"}, &iteratorForCreateMetrics{rows: arg})
 }

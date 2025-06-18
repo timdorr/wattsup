@@ -11,9 +11,7 @@ import (
 
 type CreateMetricsParams struct {
 	Time            pgtype.Timestamptz
-	DeviceName      pgtype.Text
 	DeviceID        pgtype.Int4
-	RegisterName    pgtype.Text
 	RegisterAddress pgtype.Int4
 	Value           pgtype.Int4
 }

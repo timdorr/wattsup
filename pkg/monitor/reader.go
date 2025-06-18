@@ -28,9 +28,7 @@ func (m *Monitor) readAndStore() error {
 
 		metrics = append(metrics, sql.CreateMetricsParams{
 			Time:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			DeviceName:      pgtype.Text{String: m.deviceName, Valid: true},
 			DeviceID:        pgtype.Int4{Int32: int32(m.deviceID), Valid: true},
-			RegisterName:    pgtype.Text{String: reg.Name, Valid: true},
 			RegisterAddress: pgtype.Int4{Int32: int32(reg.Address), Valid: true},
 			Value:           pgtype.Int4{Int32: int32(value), Valid: true},
 		})
