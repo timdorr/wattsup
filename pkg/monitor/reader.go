@@ -14,7 +14,7 @@ func (m *Monitor) read() error {
 			return err
 		}
 
-		value := binary.BigEndian.Uint16(result)
+		value := int16(binary.BigEndian.Uint16(result))
 
 		log.WithField("device", m.deviceName).WithField("register", reg.Name).Infof("Read value: %d", value)
 	}
