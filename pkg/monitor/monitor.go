@@ -74,7 +74,7 @@ func (m *Monitor) watch(ctx context.Context) error {
 		case <-tick.C:
 			tick.Stop()
 
-			err := m.read()
+			err := m.readAndStore()
 			if err != nil {
 				return err
 			}

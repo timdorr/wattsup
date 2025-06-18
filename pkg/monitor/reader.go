@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (m *Monitor) read() error {
+func (m *Monitor) readAndStore() error {
 	var metrics []sql.CreateMetricsParams
 	queries := sql.New(m.db)
 
