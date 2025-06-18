@@ -29,10 +29,10 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: _compressed_hypertable_2; Type: TABLE; Schema: _timescaledb_internal; Owner: -
+-- Name: _compressed_hypertable_4; Type: TABLE; Schema: _timescaledb_internal; Owner: -
 --
 
-CREATE TABLE _timescaledb_internal._compressed_hypertable_2 (
+CREATE TABLE _timescaledb_internal._compressed_hypertable_4 (
 );
 
 
@@ -75,10 +75,10 @@ CREATE INDEX metrics_time_idx ON public.metrics USING btree ("time" DESC);
 
 
 --
--- Name: _compressed_hypertable_2 ts_insert_blocker; Type: TRIGGER; Schema: _timescaledb_internal; Owner: -
+-- Name: _compressed_hypertable_4 ts_insert_blocker; Type: TRIGGER; Schema: _timescaledb_internal; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON _timescaledb_internal._compressed_hypertable_2 FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON _timescaledb_internal._compressed_hypertable_4 FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
