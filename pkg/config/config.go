@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	Database  string     `json:"database"`
 	Devices   []Device   `json:"devices"`
 	Registers []Register `json:"registers"`
 }
