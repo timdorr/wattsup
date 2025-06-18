@@ -13,14 +13,15 @@ import (
 
 const createMetric = `-- name: CreateMetric :exec
 INSERT INTO metrics (
-  time, device_id, register_name, register_address, "value"
+  time, device_name, device_id, register_name, register_address, value
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 )
 `
 
 type CreateMetricParams struct {
 	Time            pgtype.Timestamptz
+	DeviceName      pgtype.Text
 	DeviceID        pgtype.Int4
 	RegisterName    pgtype.Text
 	RegisterAddress pgtype.Int4
@@ -30,6 +31,7 @@ type CreateMetricParams struct {
 func (q *Queries) CreateMetric(ctx context.Context, arg CreateMetricParams) error {
 	_, err := q.db.Exec(ctx, createMetric,
 		arg.Time,
+		arg.DeviceName,
 		arg.DeviceID,
 		arg.RegisterName,
 		arg.RegisterAddress,
