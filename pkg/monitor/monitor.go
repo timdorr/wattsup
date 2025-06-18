@@ -14,6 +14,7 @@ import (
 
 type Monitor struct {
 	deviceName   string
+	deviceID     int
 	portFileName string
 	registers    []config.Register
 	handler      *modbus.RTUClientHandler
@@ -32,6 +33,7 @@ func NewMonitor(deviceName, portFileName string, id int, registers []config.Regi
 
 	return &Monitor{
 		deviceName:   deviceName,
+		deviceID:     id,
 		portFileName: portFileName,
 		handler:      handler,
 		client:       newClient(handler),

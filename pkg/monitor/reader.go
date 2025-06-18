@@ -1,12 +1,20 @@
 package monitor
 
 import (
+	"context"
 	"encoding/binary"
+	"time"
+
+	"github.com/timdorr/wattsup/pkg/sql"
 
 	"github.com/apex/log"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (m *Monitor) read() error {
+	var metrics []sql.CreateMetricsParams
+	queries := sql.New(m.db)
+
 	for _, reg := range m.registers {
 		result, err := m.client.ReadHoldingRegisters(reg.Address, 1)
 		if err != nil {
@@ -17,6 +25,21 @@ func (m *Monitor) read() error {
 		value := int16(binary.BigEndian.Uint16(result))
 
 		log.WithField("device", m.deviceName).WithField("register", reg.Name).Infof("Read value: %d", value)
+
+		metrics = append(metrics, sql.CreateMetricsParams{
+			Time:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			DeviceName:      pgtype.Text{String: m.deviceName, Valid: true},
+			DeviceID:        pgtype.Int4{Int32: int32(m.deviceID), Valid: true},
+			RegisterName:    pgtype.Text{String: reg.Name, Valid: true},
+			RegisterAddress: pgtype.Int4{Int32: int32(reg.Address), Valid: true},
+			Value:           pgtype.Int4{Int32: int32(value), Valid: true},
+		})
+	}
+
+	_, err := queries.CreateMetrics(context.Background(), metrics)
+	if err != nil {
+		log.WithField("metrics", metrics).WithError(err).Error("Failed to insert metrics")
+		return err
 	}
 
 	return nil

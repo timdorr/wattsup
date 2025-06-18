@@ -6,36 +6,14 @@
 package sql
 
 import (
-	"context"
-
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createMetric = `-- name: CreateMetric :exec
-INSERT INTO metrics (
-  time, device_name, device_id, register_name, register_address, value
-) VALUES (
-  $1, $2, $3, $4, $5, $6
-)
-`
-
-type CreateMetricParams struct {
+type CreateMetricsParams struct {
 	Time            pgtype.Timestamptz
 	DeviceName      pgtype.Text
 	DeviceID        pgtype.Int4
 	RegisterName    pgtype.Text
 	RegisterAddress pgtype.Int4
 	Value           pgtype.Int4
-}
-
-func (q *Queries) CreateMetric(ctx context.Context, arg CreateMetricParams) error {
-	_, err := q.db.Exec(ctx, createMetric,
-		arg.Time,
-		arg.DeviceName,
-		arg.DeviceID,
-		arg.RegisterName,
-		arg.RegisterAddress,
-		arg.Value,
-	)
-	return err
 }
