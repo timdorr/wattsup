@@ -2,6 +2,5 @@
 /wattsup
 
 .env
-sqlc.yaml
 
 wattsup.json
