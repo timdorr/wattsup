@@ -45,7 +45,7 @@ func (m *Monitor) Start(ctx context.Context) error {
 			return nil
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 }
 
