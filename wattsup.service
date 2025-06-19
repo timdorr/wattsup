@@ -1,0 +1,21 @@
+[Unit]
+Description=WattsUp Monitor
+ConditionPathExists=/home/solar/src
+After=network.target
+ 
+[Service]
+Type=simple
+User=solar
+Group=solar
+
+WorkingDirectory=/home/solar/src
+ExecStart=/home/solar/src/wattsup
+Restart=on-failure
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wattsup
+ 
+[Install]
+WantedBy=multi-user.target
