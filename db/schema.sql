@@ -29,14 +29,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: _compressed_hypertable_6; Type: TABLE; Schema: _timescaledb_internal; Owner: -
---
-
-CREATE TABLE _timescaledb_internal._compressed_hypertable_6 (
-);
-
-
---
 -- Name: metrics; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -46,6 +38,26 @@ CREATE TABLE public.metrics (
     register_address integer,
     value integer
 );
+
+
+--
+-- Name: _hyper_5_2_chunk; Type: TABLE; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE TABLE _timescaledb_internal._hyper_5_2_chunk (
+    CONSTRAINT constraint_2 CHECK ((("time" >= '2025-06-11 20:00:00-04'::timestamp with time zone) AND ("time" < '2025-06-18 20:00:00-04'::timestamp with time zone)))
+)
+INHERITS (public.metrics);
+
+
+--
+-- Name: _hyper_5_3_chunk; Type: TABLE; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE TABLE _timescaledb_internal._hyper_5_3_chunk (
+    CONSTRAINT constraint_3 CHECK ((("time" >= '2025-06-18 20:00:00-04'::timestamp with time zone) AND ("time" < '2025-06-25 20:00:00-04'::timestamp with time zone)))
+)
+INHERITS (public.metrics);
 
 
 --
@@ -66,17 +78,45 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: _hyper_5_2_chunk_metrics_register_address_time_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_5_2_chunk_metrics_register_address_time_idx ON _timescaledb_internal._hyper_5_2_chunk USING btree (register_address, "time" DESC);
+
+
+--
+-- Name: _hyper_5_2_chunk_metrics_time_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_5_2_chunk_metrics_time_idx ON _timescaledb_internal._hyper_5_2_chunk USING btree ("time" DESC);
+
+
+--
+-- Name: _hyper_5_3_chunk_metrics_register_address_time_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_5_3_chunk_metrics_register_address_time_idx ON _timescaledb_internal._hyper_5_3_chunk USING btree (register_address, "time" DESC);
+
+
+--
+-- Name: _hyper_5_3_chunk_metrics_time_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_5_3_chunk_metrics_time_idx ON _timescaledb_internal._hyper_5_3_chunk USING btree ("time" DESC);
+
+
+--
+-- Name: metrics_register_address_time_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX metrics_register_address_time_idx ON public.metrics USING btree (register_address, "time" DESC);
+
+
+--
 -- Name: metrics_time_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX metrics_time_idx ON public.metrics USING btree ("time" DESC);
-
-
---
--- Name: _compressed_hypertable_6 ts_insert_blocker; Type: TRIGGER; Schema: _timescaledb_internal; Owner: -
---
-
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON _timescaledb_internal._compressed_hypertable_6 FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
@@ -97,4 +137,5 @@ CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON public.metrics FOR EACH ROW EX
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20250618141808'),
-    ('20250618141940');
+    ('20250618141940'),
+    ('20250622203229');
