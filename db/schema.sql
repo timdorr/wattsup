@@ -41,16 +41,46 @@ CREATE TABLE public.metrics (
 
 
 --
--- Name: _direct_view_9; Type: VIEW; Schema: _timescaledb_internal; Owner: -
+-- Name: _direct_view_10; Type: VIEW; Schema: _timescaledb_internal; Owner: -
 --
 
-CREATE VIEW _timescaledb_internal._direct_view_9 AS
+CREATE VIEW _timescaledb_internal._direct_view_10 AS
  SELECT register_address,
     public.time_bucket('01:00:00'::interval, "time") AS bucket,
     avg(value) AS value
    FROM public.metrics
-  WHERE ("time" > date_trunc('day'::text, now()))
   GROUP BY register_address, (public.time_bucket('01:00:00'::interval, "time"));
+
+
+--
+-- Name: _materialized_hypertable_10; Type: TABLE; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE TABLE _timescaledb_internal._materialized_hypertable_10 (
+    register_address integer,
+    bucket timestamp with time zone NOT NULL,
+    value numeric
+);
+
+
+--
+-- Name: _hyper_10_7_chunk; Type: TABLE; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE TABLE _timescaledb_internal._hyper_10_7_chunk (
+    CONSTRAINT constraint_7 CHECK (((bucket >= '2025-06-20 20:00:00-04'::timestamp with time zone) AND (bucket < '2025-06-30 20:00:00-04'::timestamp with time zone)))
+)
+INHERITS (_timescaledb_internal._materialized_hypertable_10);
+
+
+--
+-- Name: _hyper_10_8_chunk; Type: TABLE; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE TABLE _timescaledb_internal._hyper_10_8_chunk (
+    CONSTRAINT constraint_8 CHECK (((bucket >= '2025-06-10 20:00:00-04'::timestamp with time zone) AND (bucket < '2025-06-20 20:00:00-04'::timestamp with time zone)))
+)
+INHERITS (_timescaledb_internal._materialized_hypertable_10);
 
 
 --
@@ -74,48 +104,26 @@ INHERITS (public.metrics);
 
 
 --
--- Name: _materialized_hypertable_9; Type: TABLE; Schema: _timescaledb_internal; Owner: -
+-- Name: _partial_view_10; Type: VIEW; Schema: _timescaledb_internal; Owner: -
 --
 
-CREATE TABLE _timescaledb_internal._materialized_hypertable_9 (
-    register_address integer,
-    bucket timestamp with time zone NOT NULL,
-    value numeric
-);
-
-
---
--- Name: _hyper_9_6_chunk; Type: TABLE; Schema: _timescaledb_internal; Owner: -
---
-
-CREATE TABLE _timescaledb_internal._hyper_9_6_chunk (
-    CONSTRAINT constraint_6 CHECK (((bucket >= '2025-06-20 20:00:00-04'::timestamp with time zone) AND (bucket < '2025-06-30 20:00:00-04'::timestamp with time zone)))
-)
-INHERITS (_timescaledb_internal._materialized_hypertable_9);
-
-
---
--- Name: _partial_view_9; Type: VIEW; Schema: _timescaledb_internal; Owner: -
---
-
-CREATE VIEW _timescaledb_internal._partial_view_9 AS
+CREATE VIEW _timescaledb_internal._partial_view_10 AS
  SELECT register_address,
     public.time_bucket('01:00:00'::interval, "time") AS bucket,
     avg(value) AS value
    FROM public.metrics
-  WHERE ("time" > date_trunc('day'::text, now()))
   GROUP BY register_address, (public.time_bucket('01:00:00'::interval, "time"));
 
 
 --
--- Name: metrics_daily; Type: VIEW; Schema: public; Owner: -
+-- Name: metrics_hourly; Type: VIEW; Schema: public; Owner: -
 --
 
-CREATE VIEW public.metrics_daily AS
+CREATE VIEW public.metrics_hourly AS
  SELECT register_address,
     bucket,
     value
-   FROM _timescaledb_internal._materialized_hypertable_9;
+   FROM _timescaledb_internal._materialized_hypertable_10;
 
 
 --
@@ -133,6 +141,34 @@ CREATE TABLE public.schema_migrations (
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: _hyper_10_7_chunk__materialized_hypertable_10_bucket_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_10_7_chunk__materialized_hypertable_10_bucket_idx ON _timescaledb_internal._hyper_10_7_chunk USING btree (bucket DESC);
+
+
+--
+-- Name: _hyper_10_7_chunk__materialized_hypertable_10_register_address_; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_10_7_chunk__materialized_hypertable_10_register_address_ ON _timescaledb_internal._hyper_10_7_chunk USING btree (register_address, bucket DESC);
+
+
+--
+-- Name: _hyper_10_8_chunk__materialized_hypertable_10_bucket_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_10_8_chunk__materialized_hypertable_10_bucket_idx ON _timescaledb_internal._hyper_10_8_chunk USING btree (bucket DESC);
+
+
+--
+-- Name: _hyper_10_8_chunk__materialized_hypertable_10_register_address_; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+--
+
+CREATE INDEX _hyper_10_8_chunk__materialized_hypertable_10_register_address_ ON _timescaledb_internal._hyper_10_8_chunk USING btree (register_address, bucket DESC);
 
 
 --
@@ -164,31 +200,17 @@ CREATE INDEX _hyper_5_3_chunk_metrics_time_idx ON _timescaledb_internal._hyper_5
 
 
 --
--- Name: _hyper_9_6_chunk__materialized_hypertable_9_bucket_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+-- Name: _materialized_hypertable_10_bucket_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
 --
 
-CREATE INDEX _hyper_9_6_chunk__materialized_hypertable_9_bucket_idx ON _timescaledb_internal._hyper_9_6_chunk USING btree (bucket DESC);
-
-
---
--- Name: _hyper_9_6_chunk__materialized_hypertable_9_register_address_bu; Type: INDEX; Schema: _timescaledb_internal; Owner: -
---
-
-CREATE INDEX _hyper_9_6_chunk__materialized_hypertable_9_register_address_bu ON _timescaledb_internal._hyper_9_6_chunk USING btree (register_address, bucket DESC);
+CREATE INDEX _materialized_hypertable_10_bucket_idx ON _timescaledb_internal._materialized_hypertable_10 USING btree (bucket DESC);
 
 
 --
--- Name: _materialized_hypertable_9_bucket_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
+-- Name: _materialized_hypertable_10_register_address_bucket_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
 --
 
-CREATE INDEX _materialized_hypertable_9_bucket_idx ON _timescaledb_internal._materialized_hypertable_9 USING btree (bucket DESC);
-
-
---
--- Name: _materialized_hypertable_9_register_address_bucket_idx; Type: INDEX; Schema: _timescaledb_internal; Owner: -
---
-
-CREATE INDEX _materialized_hypertable_9_register_address_bucket_idx ON _timescaledb_internal._materialized_hypertable_9 USING btree (register_address, bucket DESC);
+CREATE INDEX _materialized_hypertable_10_register_address_bucket_idx ON _timescaledb_internal._materialized_hypertable_10 USING btree (register_address, bucket DESC);
 
 
 --
@@ -220,10 +242,10 @@ CREATE TRIGGER ts_cagg_invalidation_trigger AFTER INSERT OR DELETE OR UPDATE ON 
 
 
 --
--- Name: _materialized_hypertable_9 ts_insert_blocker; Type: TRIGGER; Schema: _timescaledb_internal; Owner: -
+-- Name: _materialized_hypertable_10 ts_insert_blocker; Type: TRIGGER; Schema: _timescaledb_internal; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON _timescaledb_internal._materialized_hypertable_9 FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON _timescaledb_internal._materialized_hypertable_10 FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
