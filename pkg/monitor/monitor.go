@@ -49,7 +49,10 @@ func (m *Monitor) Start(ctx context.Context) error {
 		err := m.handler.Connect()
 		if err != nil {
 			log.WithError(err).WithField("device", m.deviceName).Error("Failed to connect")
-			return err
+
+			time.Sleep(5 * time.Second)
+
+			continue
 		}
 
 		err = m.watch(ctx)
