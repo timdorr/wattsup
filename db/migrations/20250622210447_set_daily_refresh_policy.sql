@@ -5,3 +5,4 @@ SELECT add_continuous_aggregate_policy('metrics_hourly',
   schedule_interval => INTERVAL '5m');
 
 -- migrate:down
+SELECT remove_continuous_aggregate_policy('metrics_hourly');
