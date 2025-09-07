@@ -13,7 +13,6 @@ import (
 
 func (m *Monitor) readAndStore() error {
 	var metrics []sql.CreateMetricsParams
-	queries := sql.New(m.db)
 
 	for _, reg := range m.registers {
 		result, err := m.client.ReadHoldingRegisters(reg.Address, 1)
@@ -34,7 +33,7 @@ func (m *Monitor) readAndStore() error {
 		})
 	}
 
-	_, err := queries.CreateMetrics(context.Background(), metrics)
+	_, err := m.db.CreateMetrics(context.Background(), metrics)
 	if err != nil {
 		log.WithField("metrics", metrics).WithError(err).Error("Failed to insert metrics")
 		return err

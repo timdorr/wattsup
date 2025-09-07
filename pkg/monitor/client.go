@@ -6,7 +6,12 @@ import (
 	"github.com/goburrow/modbus"
 )
 
-func newHandler(portFileName string, id int) *modbus.RTUClientHandler {
+type ModbusClientImpl struct {
+	handler *modbus.RTUClientHandler
+	client  modbus.Client
+}
+
+func NewModbusClient(portFileName string, id int) ModbusClient {
 	handler := modbus.NewRTUClientHandler(portFileName)
 	handler.BaudRate = 9600
 	handler.DataBits = 8
@@ -14,10 +19,20 @@ func newHandler(portFileName string, id int) *modbus.RTUClientHandler {
 	handler.Timeout = 3 * time.Second
 	handler.SlaveId = byte(id)
 
-	return handler
+	return &ModbusClientImpl{
+		handler: handler,
+		client:  modbus.NewClient(handler),
+	}
 }
 
-func newClient(handler *modbus.RTUClientHandler) modbus.Client {
-	client := modbus.NewClient(handler)
-	return client
+func (m *ModbusClientImpl) Connect() error {
+	return m.handler.Connect()
+}
+
+func (m *ModbusClientImpl) Close() error {
+	return m.handler.Close()
+}
+
+func (m *ModbusClientImpl) ReadHoldingRegisters(address, quantity uint16) (results []byte, err error) {
+	return m.client.ReadHoldingRegisters(address, quantity)
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
-
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,11 +27,22 @@ var rootCmd = &cobra.Command{
 
 		log.Info("⚡⚡⚡ Starting WattsUp ⚡⚡⚡")
 
+		pool, err := pgxpool.New(ctx, config.Database)
+		if err != nil {
+			log.WithError(err).Error("Failed to create database pool")
+			os.Exit(1)
+		}
+
 		for _, device := range config.Devices {
 			log.WithField("device", device).Infof("Starting monitor for device: %s", device.Name)
 
-			monitor := monitor.NewMonitor(device.Name, device.File, device.ID, config.Registers, config.Database)
-			go monitor.Start(ctx)
+			client := monitor.NewModbusClient(device.File, device.ID)
+			m, err := monitor.NewMonitor(device.Name, device.ID, config.Registers, client, pool)
+			if err != nil {
+				log.WithError(err).WithField("device", device.Name).Error("Failed to create monitor")
+				continue
+			}
+			go m.Start(ctx)
 		}
 
 		<-ctx.Done()
