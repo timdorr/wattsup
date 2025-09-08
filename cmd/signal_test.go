@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"context"
+	"os"
+	"syscall"
 	"testing"
+	"time"
 )
 
 func TestSetupSignalHandler(t *testing.T) {
@@ -15,5 +19,23 @@ func TestSetupSignalHandler(t *testing.T) {
 		onlyOneSignalHandler = make(chan struct{})
 		setupSignalHandler()
 		setupSignalHandler()
+	})
+}
+
+func TestHandleSignals(t *testing.T) {
+	t.Run("cancels context on SIGTERM", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		c := make(chan os.Signal, 1)
+
+		go handleSignals(cancel, c)
+
+		c <- syscall.SIGTERM
+
+		select {
+		case <-ctx.Done():
+			// success
+		case <-time.After(1 * time.Second):
+			t.Fatal("context was not canceled after 1s")
+		}
 	})
 }
