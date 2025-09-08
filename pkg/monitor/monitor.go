@@ -22,14 +22,8 @@ type Monitor struct {
 	db           *pgxpool.Pool
 }
 
-func NewMonitor(deviceName, portFileName string, id int, registers []config.Register, database string) *Monitor {
+func NewMonitor(deviceName, portFileName string, id int, registers []config.Register, db *pgxpool.Pool) *Monitor {
 	handler := newHandler(portFileName, id)
-
-	pool, err := pgxpool.New(context.Background(), database)
-	if err != nil {
-		log.WithError(err).Error("Failed to create database pool")
-		os.Exit(1)
-	}
 
 	return &Monitor{
 		deviceName:   deviceName,
@@ -38,7 +32,7 @@ func NewMonitor(deviceName, portFileName string, id int, registers []config.Regi
 		handler:      handler,
 		client:       newClient(handler),
 		registers:    registers,
-		db:           pool,
+		db:           db,
 	}
 }
 
