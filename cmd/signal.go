@@ -19,14 +19,16 @@ func setupSignalHandler() context.Context {
 
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, shutdownSignals...)
-	go func() {
-		<-c
-		log.Info("Shutting down gracefully...")
-		cancel()
-		<-c
-		log.Fatal("Forcing shutdown...")
-		os.Exit(1) // second signal. Exit directly.
-	}()
+	go handleSignals(cancel, c)
 
 	return ctx
+}
+
+func handleSignals(cancel context.CancelFunc, c chan os.Signal) {
+	<-c
+	log.Info("Shutting down gracefully...")
+	cancel()
+	<-c
+	log.Fatal("Forcing shutdown...")
+	os.Exit(1) // second signal. Exit directly.
 }

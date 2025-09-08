@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"os"
 	"time"
 
@@ -28,7 +27,7 @@ var rootCmd = &cobra.Command{
 
 		log.Info("⚡⚡⚡ Starting WattsUp ⚡⚡⚡")
 
-		pool, err := pgxpool.New(context.Background(), config.Database)
+		pool, err := pgxpool.New(ctx, config.Database)
 		if err != nil {
 			log.WithError(err).Error("Failed to create database pool")
 			os.Exit(1)
@@ -38,8 +37,13 @@ var rootCmd = &cobra.Command{
 		for _, device := range config.Devices {
 			log.WithField("device", device).Infof("Starting monitor for device: %s", device.Name)
 
-			monitor := monitor.NewMonitor(device.Name, device.File, device.ID, config.Registers, pool)
-			go monitor.Start(ctx)
+			client := monitor.NewModbusClient(device.File, device.ID)
+			m, err := monitor.NewMonitor(device.Name, device.ID, config.Registers, client, pool)
+			if err != nil {
+				log.WithError(err).WithField("device", device.Name).Error("Failed to create monitor")
+				continue
+			}
+			go m.Start(ctx)
 		}
 
 		<-ctx.Done()
