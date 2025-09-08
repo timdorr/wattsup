@@ -32,7 +32,6 @@ var rootCmd = &cobra.Command{
 			log.WithError(err).Error("Failed to create database pool")
 			os.Exit(1)
 		}
-		defer pool.Close()
 
 		for _, device := range config.Devices {
 			log.WithField("device", device).Infof("Starting monitor for device: %s", device.Name)
