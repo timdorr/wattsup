@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
-
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,10 +28,17 @@ var rootCmd = &cobra.Command{
 
 		log.Info("⚡⚡⚡ Starting WattsUp ⚡⚡⚡")
 
+		pool, err := pgxpool.New(context.Background(), config.Database)
+		if err != nil {
+			log.WithError(err).Error("Failed to create database pool")
+			os.Exit(1)
+		}
+		defer pool.Close()
+
 		for _, device := range config.Devices {
 			log.WithField("device", device).Infof("Starting monitor for device: %s", device.Name)
 
-			monitor := monitor.NewMonitor(device.Name, device.File, device.ID, config.Registers, config.Database)
+			monitor := monitor.NewMonitor(device.Name, device.File, device.ID, config.Registers, pool)
 			go monitor.Start(ctx)
 		}
 
