@@ -11,9 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// Import alias for testing
+type CreateMetricsParams = sql.CreateMetricsParams
+
 func (m *Monitor) readAndStore() error {
-	var metrics []sql.CreateMetricsParams
-	queries := sql.New(m.db)
+	var metrics []CreateMetricsParams
 
 	for _, reg := range m.registers {
 		result, err := m.client.ReadHoldingRegisters(reg.Address, 1)
@@ -26,7 +28,7 @@ func (m *Monitor) readAndStore() error {
 
 		log.WithField("device", m.deviceName).WithField("register", reg.Name).Infof("Read value: %d", value)
 
-		metrics = append(metrics, sql.CreateMetricsParams{
+		metrics = append(metrics, CreateMetricsParams{
 			Time:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
 			DeviceID:        pgtype.Int4{Int32: int32(m.deviceID), Valid: true},
 			RegisterAddress: pgtype.Int4{Int32: int32(reg.Address), Valid: true},
@@ -34,7 +36,7 @@ func (m *Monitor) readAndStore() error {
 		})
 	}
 
-	_, err := queries.CreateMetrics(context.Background(), metrics)
+	_, err := m.db.CreateMetrics(context.Background(), metrics)
 	if err != nil {
 		log.WithField("metrics", metrics).WithError(err).Error("Failed to insert metrics")
 		return err

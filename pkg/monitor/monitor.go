@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/timdorr/wattsup/pkg/config"
+	"github.com/timdorr/wattsup/pkg/sql"
 
 	"github.com/apex/log"
-	"github.com/goburrow/modbus"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -17,13 +17,14 @@ type Monitor struct {
 	deviceID     int
 	portFileName string
 	registers    []config.Register
-	handler      *modbus.RTUClientHandler
-	client       modbus.Client
-	db           *pgxpool.Pool
+	handler      ModbusHandler
+	client       ModbusClient
+	db           DatabaseQuerier
 }
 
 func NewMonitor(deviceName, portFileName string, id int, registers []config.Register, database string) *Monitor {
 	handler := newHandler(portFileName, id)
+	client := newClient(handler)
 
 	pool, err := pgxpool.New(context.Background(), database)
 	if err != nil {
@@ -35,10 +36,23 @@ func NewMonitor(deviceName, portFileName string, id int, registers []config.Regi
 		deviceName:   deviceName,
 		deviceID:     id,
 		portFileName: portFileName,
-		handler:      handler,
-		client:       newClient(handler),
+		handler:      &modbusHandlerWrapper{handler: handler},
+		client:       &modbusClientWrapper{client: client},
 		registers:    registers,
-		db:           pool,
+		db:           sql.New(pool),
+	}
+}
+
+// NewMonitorWithDeps creates a new monitor with injected dependencies (for testing)
+func NewMonitorWithDeps(deviceName, portFileName string, id int, registers []config.Register, handler ModbusHandler, client ModbusClient, db DatabaseQuerier) *Monitor {
+	return &Monitor{
+		deviceName:   deviceName,
+		deviceID:     id,
+		portFileName: portFileName,
+		handler:      handler,
+		client:       client,
+		registers:    registers,
+		db:           db,
 	}
 }
 
@@ -50,9 +64,12 @@ func (m *Monitor) Start(ctx context.Context) error {
 		if err != nil {
 			log.WithError(err).WithField("device", m.deviceName).Error("Failed to connect")
 
-			time.Sleep(5 * time.Second)
-
-			continue
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(5 * time.Second):
+				continue
+			}
 		}
 
 		err = m.watch(ctx)
@@ -60,13 +77,19 @@ func (m *Monitor) Start(ctx context.Context) error {
 			return nil
 		}
 
-		time.Sleep(2 * time.Second)
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(2 * time.Second):
+			// Continue loop
+		}
 	}
 }
 
 func (m *Monitor) watch(ctx context.Context) error {
 	interval := 1 * time.Second
 	tick := time.NewTicker(interval)
+	defer tick.Stop()
 
 	for {
 		select {
@@ -75,14 +98,10 @@ func (m *Monitor) watch(ctx context.Context) error {
 			m.handler.Close()
 			return nil
 		case <-tick.C:
-			tick.Stop()
-
 			err := m.readAndStore()
 			if err != nil {
 				return err
 			}
-
-			tick.Reset(interval)
 		}
 	}
 }
