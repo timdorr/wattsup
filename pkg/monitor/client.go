@@ -26,6 +26,7 @@ func NewModbusClient(portFileName string, id int) ModbusClient {
 }
 
 func (m *ModbusClientImpl) Connect() error {
+	_ = m.handler.Close()
 	return m.handler.Connect()
 }
 

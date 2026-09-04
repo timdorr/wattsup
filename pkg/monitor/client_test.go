@@ -10,5 +10,10 @@ func TestNewModbusClient(t *testing.T) {
 		if client == nil {
 			t.Fatal("NewModbusClient() returned nil")
 		}
+
+		// Close on an unopen client is safe and returns nil
+		if err := client.Close(); err != nil {
+			t.Fatalf("Close() unexpected error: %v", err)
+		}
 	})
 }

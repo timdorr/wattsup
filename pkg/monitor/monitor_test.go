@@ -18,13 +18,17 @@ type mockModbusClient struct {
 	closeErr             error
 	readHoldingRegsErr   error
 	readHoldingRegsValue []byte
+	connectCount         int
+	closeCount           int
 }
 
 func (m *mockModbusClient) Connect() error {
+	m.connectCount++
 	return m.connectErr
 }
 
 func (m *mockModbusClient) Close() error {
+	m.closeCount++
 	return m.closeErr
 }
 
@@ -139,3 +143,117 @@ func TestNewMonitor(t *testing.T) {
 		}
 	})
 }
+
+func TestWatch(t *testing.T) {
+	registers := []config.Register{
+		{Name: "Reg1", Address: 100},
+	}
+
+	t.Run("context cancelled closes client", func(t *testing.T) {
+		client := &mockModbusClient{
+			readHoldingRegsValue: []byte{0, 123},
+		}
+		db := &mockDBTX{}
+		m := &Monitor{
+			deviceName: "testDevice",
+			deviceID:   1,
+			registers:  registers,
+			client:     client,
+			db:         sql.New(db),
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel() // cancel immediately
+
+		err := m.watch(ctx)
+		if err != nil {
+			t.Fatalf("watch() error = %v, wantErr nil", err)
+		}
+		if client.closeCount != 1 {
+			t.Fatalf("watch() closeCount = %d, want 1", client.closeCount)
+		}
+	})
+
+	t.Run("read error closes client", func(t *testing.T) {
+		client := &mockModbusClient{
+			readHoldingRegsErr: errors.New("read failure"),
+		}
+		db := &mockDBTX{}
+		m := &Monitor{
+			deviceName: "testDevice",
+			deviceID:   1,
+			registers:  registers,
+			client:     client,
+			db:         sql.New(db),
+		}
+
+		ctx := context.Background()
+		// Wait for ticker or inject an error
+		// watch ticks every 1 second, but we can verify read error terminates and closes
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		errChan := make(chan error, 1)
+		go func() {
+			errChan <- m.watch(ctx)
+		}()
+
+		select {
+		case err := <-errChan:
+			if err == nil {
+				t.Fatal("watch() expected error, got nil")
+			}
+			if client.closeCount != 1 {
+				t.Fatalf("watch() closeCount = %d, want 1", client.closeCount)
+			}
+		}
+	})
+}
+
+func TestStart(t *testing.T) {
+	t.Run("context cancelled exits cleanly", func(t *testing.T) {
+		client := &mockModbusClient{}
+		db := &mockDBTX{}
+		m := &Monitor{
+			deviceName: "testDevice",
+			deviceID:   1,
+			registers:  nil,
+			client:     client,
+			db:         sql.New(db),
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		err := m.Start(ctx)
+		if err != nil {
+			t.Fatalf("Start() error = %v, want nil", err)
+		}
+	})
+
+	t.Run("connect error exits on cancelled context", func(t *testing.T) {
+		client := &mockModbusClient{
+			connectErr: errors.New("connect failure"),
+		}
+		db := &mockDBTX{}
+		m := &Monitor{
+			deviceName: "testDevice",
+			deviceID:   1,
+			registers:  nil,
+			client:     client,
+			db:         sql.New(db),
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		// Cancel after short delay
+		go func() {
+			cancel()
+		}()
+
+		err := m.Start(ctx)
+		if err != nil {
+			t.Fatalf("Start() error = %v, want nil", err)
+		}
+	})
+}
+

@@ -43,11 +43,21 @@ func (m *Monitor) Start(ctx context.Context) error {
 	log.WithField("name", m.deviceName).Info("Starting monitor...")
 
 	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+
 		err := m.client.Connect()
 		if err != nil {
 			log.WithError(err).WithField("device", m.deviceName).Error("Failed to connect")
 
-			time.Sleep(5 * time.Second)
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(5 * time.Second):
+			}
 
 			continue
 		}
@@ -57,19 +67,27 @@ func (m *Monitor) Start(ctx context.Context) error {
 			return nil
 		}
 
-		time.Sleep(2 * time.Second)
+		log.WithError(err).WithField("device", m.deviceName).Warn("Monitor stopped unexpectedly, reconnecting...")
+
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(2 * time.Second):
+		}
 	}
 }
 
 func (m *Monitor) watch(ctx context.Context) error {
+	defer m.client.Close()
+
 	interval := 1 * time.Second
 	tick := time.NewTicker(interval)
+	defer tick.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.WithField("device", m.deviceName).Info("Stopping monitor...")
-			m.client.Close()
 			return nil
 		case <-tick.C:
 			tick.Stop()
